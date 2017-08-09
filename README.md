@@ -1,1 +1,1 @@
-# Library for transparency in machine learning.
+# Lib Iris - transparency for machine learning in scala

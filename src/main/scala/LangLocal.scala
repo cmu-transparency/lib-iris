@@ -21,13 +21,6 @@ object LangLocal {
 
   }
 
-  case class Associative(
-    op: Operation:Associative,
-    elements: Seq[Exp]
-  ) extends Exp() {
-
-  }
-
   case class Unary(
     op: Operation.Unary,
     input: Exp
@@ -46,20 +39,14 @@ object LangLocal {
 }
 
 object Operation {
-  trait Monoid[E] {
-    val sym: String
-    val zero: E
-    val plus: E => E => E
-  }
-
   trait Unary[I,O] {
     val sym: String
-    val fun: I => O
+    val imp: I => O
   }
 
   trait Binary[I,O] {
     val sym: String
-    val fun: I => I => O
+    val imp: I => I => O
   }
 
   object Arithmetic {
@@ -68,34 +55,25 @@ object Operation {
     }
 
     object Binary {
-
-    }
-
-    object Monoid {
-      def add[E <: Numeric]: Monoid[E] = new Monoid[E] {
+     def add[E <: Numeric]: Binary[E,E] = new Binary[E,E] {
         val sym = "+"
-        val zero = zero
-        val plus = e1 => e2 => e1 + e2
+        val imp = e1 => e2 => e1 + e2
       }
-      def mul[E <: Numeric]: Monoid[E] = new Monoid[E] {
+      def mul[E <: Numeric]: Binary[E,E] = new Monoid[E,E] {
         val sym = "*"
-        val zero = one
-        val plus = e1 => e2 => e1 * e2
+        val imp = e1 => e2 => e1 * e2
       }
-      def and[E <: Boolean]: Monoid[E] = new Monoid[E] {
+      def and[E <: Boolean]: Binary[E,E] = new Binary[E,E] {
         val sym = "∧"
-        val zero = true
-        val plus = e1 => e2 => e1 && e2
+        val imp = e1 => e2 => e1 && e2
       }
-      def or[E <: Boolean]: Monoid[E] = new Monoid[E] {
+      def or[E <: Boolean]: Binary[E,E] = new Binary[E,E] {
         val sym = "∨"
-        val zero = false
-        val plus = e1 => e2 => e1 || e2
+        val imp = e1 => e2 => e1 || e2
       }
-      def xor[E <: Boolean]: Monoid[E] = new Monoid[E] {
+      def xor[E <: Boolean]: Binary[E,E] = new Binary[E,E] {
         val sym = "⊕"
-        val zero = false
-        val plus = e1 => e2 => e1 ^ e2
+        val imp = e1 => e2 => e1 ^ e2
       }
     }
   }

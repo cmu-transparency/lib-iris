@@ -5,34 +5,36 @@ import scala.math._
 /** Language for local representation models. */
 object LangLocal {
 
-  case class Exp() {
+  trait Exp[T]
+
+  case class Cond[T](
+    guard: Exp[T],
+    iftrue: Exp[T],
+    iffalse: Exp[T]
+  ) extends Exp[T] {
 
   }
 
-  case class Cond(guard: Exp, iftrue: Exp, iffalse: Exp) extends Exp() {
+  case class Const[T](constval: T) extends Exp[T] {
 
   }
 
-  case class Const(constval: Double) extends Exp() {
+  case class Var[T](id: String) extends Exp[T] {
 
   }
 
-  case class Var(id: String) extends Exp() {
+  case class Unary[T](
+    op: Operation.Unary[T,T],
+    input: Exp[T]
+  ) extends Exp[T] {
 
   }
 
-  case class Unary(
-    op: Operation.Unary,
-    input: Exp
-  ) extends Exp() {
-
-  }
-
-  case class Binary(
-    op: Operation.Binary,
-    left: Exp,
-    right: Exp
-  ) extends Exp() {
+  case class Binary[T](
+    op: Operation.Binary[T,T],
+    left: Exp[T],
+    right: Exp[T]
+  ) extends Exp[T] {
 
   }
 
@@ -41,12 +43,12 @@ object LangLocal {
 object Operation {
   trait Unary[I,O] {
     val sym: String
-    val imp: I => O
+    def imp: I => O
   }
 
   trait Binary[I,O] {
     val sym: String
-    val imp: I => I => O
+    def imp: I => I => O
   }
 
   object Arithmetic {
@@ -55,26 +57,26 @@ object Operation {
     }
 
     object Binary {
-     def add[E <: Numeric]: Binary[E,E] = new Binary[E,E] {
+     def add[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
         val sym = "+"
-        val imp = e1 => e2 => e1 + e2
+        def imp(e1:E, e2:E): E = num.plus(e1,e2)
       }
-      def mul[E <: Numeric]: Binary[E,E] = new Monoid[E,E] {
+      def mul[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
         val sym = "*"
-        val imp = e1 => e2 => e1 * e2
+        def imp(e1:E, e2:E): E = num.times(e1, e2)
       }
-      def and[E <: Boolean]: Binary[E,E] = new Binary[E,E] {
+/*      def and[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
         val sym = "∧"
-        val imp = e1 => e2 => e1 && e2
+        val imp = e1 => e2 => num.(e1, e2)
       }
-      def or[E <: Boolean]: Binary[E,E] = new Binary[E,E] {
+      def or[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
         val sym = "∨"
-        val imp = e1 => e2 => e1 || e2
+        val imp = e1 => e2 => num.()e1 || e2)
       }
-      def xor[E <: Boolean]: Binary[E,E] = new Binary[E,E] {
+      def xor[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
         val sym = "⊕"
-        val imp = e1 => e2 => e1 ^ e2
-      }
+        val imp = e1 => e2 => num.()e1 ^ e2)
+      }*/
     }
   }
 }

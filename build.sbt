@@ -1,14 +1,14 @@
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-libraryDependencies += "com.holdenkarau" %%
-                       "spark-testing-base" % "2.1.0_0.6.0" % "test"
+//libraryDependencies += "com.holdenkarau" %%
+//                       "spark-testing-base" % "2.1.0_0.6.0" % "test"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
 scalacOptions += "-deprecation"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.11.8",
+  //scalaVersion := "2.11.8",
   organization := "edu.cmu.spf",
   version      := "0.1",
   shellPrompt in ThisBuild := { state =>

@@ -10,8 +10,10 @@ import Types.Precision
 /** Influence measures and related computations. */
 object Influence {
 
-  /** Modes of influence computation. Single are unary or group
-    * modes. */
+  /**
+   * Modes of influence computation. Single are unary or group
+   * modes.
+   */
   trait SingleMode
 
   /** Unary QII */
@@ -35,8 +37,7 @@ object Influence {
    */
   class SingleQII(
     val mode: SingleMode,
-    val prec: Precision = Precision.Full()
-  ) {
+    val prec: Precision = Precision.Full()) {
     /**
      * Compute the influence.
      *
@@ -57,8 +58,7 @@ object Influence {
    */
   class MultiQII(
     val mode: MultiMode,
-    val prec: Precision = Precision.Full()
-  ) {
+    val prec: Precision = Precision.Full()) {
 
     /**
      * Compute the influence.
@@ -71,6 +71,4 @@ object Influence {
     }
   }
 }
-
-
 

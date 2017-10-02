@@ -2,70 +2,66 @@ package edu.cmu.spf.iris
 
 import scala.math._
 
+/*
+
 /** Language for local representation models. */
 object LangLocal {
+  type DT = Double
+  object Expression {
 
-  trait Exp[T]
+    trait Exp
+    case class Cond(
+      guard: Exp,
+      iftrue: Exp,
+      iffalse: Exp) extends Exp {
+      override def toString: String =
+        "ite(" + Seq(guard, iftrue, iffalse).map(_.toString).mkString(".") + ")"
+    }
 
-  case class Cond[T](
-    guard: Exp[T],
-    iftrue: Exp[T],
-    iffalse: Exp[T]
-  ) extends Exp[T] {
-
-  }
-
-  case class Const[T](constval: T) extends Exp[T] {
-
-  }
-
-  case class Var[T](id: String) extends Exp[T] {
-
-  }
-
-  case class Unary[T](
-    op: Operation.Unary[T,T],
-    input: Exp[T]
-  ) extends Exp[T] {
-
-  }
-
-  case class Binary[T](
-    op: Operation.Binary[T,T],
-    left: Exp[T],
-    right: Exp[T]
-  ) extends Exp[T] {
-
-  }
-
-}
-
-object Operation {
-  trait Unary[I,O] {
-    val sym: String
-    def imp: I => O
-  }
-
-  trait Binary[I,O] {
-    val sym: String
-    def imp: I => I => O
-  }
-
-  object Arithmetic {
-    object Unary {
+    case class Const(constval: DT) extends Exp {
 
     }
 
-    object Binary {
-     def add[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
+    case class Var(id: String) extends Exp {
+
+    }
+
+    case class Unary(
+      op: Operation.Unary,
+      input: Exp) extends Exp {
+
+    }
+
+    case class Binary(
+      op: Operation.Binary,
+      left: Exp,
+      right: Exp) extends Exp {
+
+    }
+  }
+
+  object Operation {
+
+    trait Unary {
+      val sym: String
+      def imp: DT => DT
+    }
+
+    trait Binary {
+      val sym: String
+      def imp: DT => DT => DT
+    }
+
+    object Arithmetic {
+      def add[E](implicit num: Numeric[E]): Binary = new Binary {
         val sym = "+"
-        def imp(e1:E, e2:E): E = num.plus(e1,e2)
+        def imp(e1: E, e2: E): E = num.plus(e1, e2)
       }
-      def mul[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
+      def mul[E](implicit num: Numeric[E]): Binary = new Binary {
         val sym = "*"
-        def imp(e1:E, e2:E): E = num.times(e1, e2)
+        def imp(e1: E, e2: E): E = num.times(e1, e2)
       }
-/*      def and[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
+      /*      def and[E](implicit num: Numeric[E]): Binary[E,E] = new Binary[E,E] {
         val sym = "∧"
         val imp = e1 => e2 => num.(e1, e2)
       }
@@ -80,3 +76,5 @@ object Operation {
     }
   }
 }
+
+ */ 

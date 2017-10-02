@@ -1,5 +1,5 @@
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+//libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
+//libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 //libraryDependencies += "com.holdenkarau" %%
 //                       "spark-testing-base" % "2.1.0_0.6.0" % "test"
 

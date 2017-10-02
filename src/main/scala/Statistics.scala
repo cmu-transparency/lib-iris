@@ -38,6 +38,7 @@ object Statistics extends App {
 
     val quantizer = new QuantileDiscretizer()
       .setNumBuckets(cmdline.discrete_bins)
+      .setHandleInvalid("keep")
 
     data.columns
       .zip(data.schema.fields)
@@ -48,7 +49,7 @@ object Statistics extends App {
 
           val column = {
             column_type match {
-              case StringType | IntegerType => data.select(column_name)
+              case StringType | IntegerType => data
               case DoubleType =>
                 quantizer
                   .setInputCol(column_name)
@@ -56,9 +57,8 @@ object Statistics extends App {
                   .fit(data).transform(data)
                   .drop(column_name)
                   .withColumnRenamed(column_name + "_discrete", column_name)
-                  .select(column_name + "_discrete")
             }
-          }
+          }.select(column_name)
 
           column
             .groupBy(column_name)

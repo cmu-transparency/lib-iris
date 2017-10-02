@@ -23,8 +23,8 @@ lazy val root = Project(
     fork in run := true,
     mainClass    := Some("TestClass"),
     libraryDependencies ++= Seq(
-      "org.apache.spark" %% "spark-core"  % "2.0.1",
-      "org.apache.spark" %% "spark-mllib" % "2.0.1",
+      "org.apache.spark" %% "spark-core"  % "2.1.0",
+      "org.apache.spark" %% "spark-mllib" % "2.1.0",
       "com.databricks"   %% "spark-csv"   % "1.5.0"
     )
   )

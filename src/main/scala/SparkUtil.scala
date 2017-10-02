@@ -25,6 +25,8 @@ object SparkUtil {
     .builder
     .master("local[*]")
     .config("spark.ui.showConsoleProgress", false)
+    .config("spark.driver.memory", "16g")
+    .config("spark.executor.memory", "64g")
     .appName("SparkUtil")
     .getOrCreate()
 

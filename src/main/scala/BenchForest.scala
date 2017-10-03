@@ -13,13 +13,15 @@ import org.apache.spark.ml.UnaryTransformer
 import org.apache.spark.sql.types._
 
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.ml.classification.RandomForestClassifier
 
 import java.io.{ File, FileWriter, BufferedWriter }
 
-object Statistics extends App {
+object BenchForest extends App {
   case class CmdLine(
-    input_file: File = new File("."),
-    discrete_bins: Int = 10)
+    input_file: File = null,
+    discrete_bins: Int = 10,
+    target: String = null)
 
   val parser = new scopt.OptionParser[CmdLine]("Statistics") {
     head("Statistics", "0.1")
@@ -28,13 +30,15 @@ object Statistics extends App {
       .action((x, c) => c.copy(input_file = x))
     opt[Int]('b', "bins")
       .action((x, c) => c.copy(discrete_bins = x))
+    opt[String]('t', "target")
+      .action((x, c) => c.copy(target = x))
   }
   parser.parse(args, CmdLine()) match {
-    case Some(cmdline) => RunStatistics(cmdline)
+    case Some(cmdline) => RunForest(cmdline)
     case None => ()
   }
 
-  def RunStatistics(cmdline: CmdLine): Unit = {
+  def RunForest(cmdline: CmdLine): Unit = {
     val schema = StructType(Array(
       StructField("As of Year", StringType, true),
       StructField("Respondent ID", DoubleType, true),
@@ -80,8 +84,9 @@ object Statistics extends App {
       StructField("Tract to MSA/MD Income %", DoubleType, true),
       StructField("Number of Owner-occupied units", DoubleType, true),
       StructField("Number of 1-to 4-Family units", DoubleType, true),
-      StructField("Application Date Indicator", StringType, true)
-    ))
+      StructField("Application Date Indicator", StringType, true)))
+
+    println(s"loading ${cmdline.input_file}")
 
     val data = SparkUtil.csvReader
       .option("delimiter", "\t")
@@ -90,14 +95,43 @@ object Statistics extends App {
       .load(cmdline.input_file.toString)
       .persist(StorageLevel.MEMORY_ONLY)
 
+    val target_column =
+      if (null != cmdline.target) { cmdline.target } else { data.columns.last }
+
+    println(s"transforming features")
+
+    val data_feats = SparkUtil.buildFeatures(
+      data,
+      input_columns = data.columns.toSet,
+      output_column = "features",
+      exclude_in_vector = Set[String](target_column)
+    )
+
+    //println(data_feats)
+    //data_feats.collect.foreach { row => println(" " + row) }
+    //println("count = " + data_feats.count)
+    //data_feats.schema.printTreeString
+
+    val classer = new RandomForestClassifier()
+      .setLabelCol(target_column)
+      .setFeaturesCol("features")
+      .setNumTrees(10)
+      .setMaxDepth(5)
+
+    val model = classer.fit(data_feats)
+    println(model.toDebugString)
+
+    /*
     val quantizer = new QuantileDiscretizer()
       .setNumBuckets(cmdline.discrete_bins)
       .setHandleInvalid("keep")
+     */
 
-    data.columns
+    /*data.columns
       .zip(data.schema.fields)
-      .foreach { case (column_name, f) =>
-        var buckets: Option[Array[Double]] = None
+      .foreach {
+        case (column_name, f) =>
+          var buckets: Option[Array[Double]] = None
 
           val column_type = f.dataType
           println(s"$column_name ($column_type)")
@@ -119,23 +153,7 @@ object Statistics extends App {
             }
           }.select(column_name)
 
-        val values = column
-          .groupBy(column_name)
-          .count
-          .collect
+     */
 
-        buckets match {
-          case None => values.foreach {case row =>
-            println(s"  ${row.get(0)}: ${row.get(1)}")
-          }
-          case Some(splits) => values.foreach {case row =>
-            val label = if (row.isNullAt(0)) { "null" } else {
-              val quantile: Int = row.getDouble(0).toInt
-              "["+splits(quantile).toString + "," + splits(quantile+1).toString + ")"
-            }
-            println(s"  ${row.get(0)} $label: ${row.get(1)}")
-          }
-        }
-        }
   }
-  }
+}

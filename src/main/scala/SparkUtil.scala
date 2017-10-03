@@ -98,6 +98,7 @@ object SparkUtil {
       extends Transformer {
 
     def transformSchema(schema: StructType): StructType = {
+      println(s"transformSchema: rename column $inputCol to $outputCol")
       val inputType = schema(inputCol).dataType
       val nullable  = schema(inputCol).nullable
         if (schema.fieldNames.contains(outputCol)) {
@@ -109,7 +110,7 @@ object SparkUtil {
     }
 
     def transform(df: Dataset[_]): DataFrame = {
-      println(s"rename column $inputCol to $outputCol")
+      println(s"transform: rename column $inputCol to $outputCol")
       df.withColumnRenamed(inputCol, outputCol)
    }
 
@@ -124,6 +125,7 @@ object SparkUtil {
       extends Transformer {
 
       def transformSchema(schema: StructType): StructType = {
+        println(s"transformSchema: delete column $inputCol")
         if (! schema.fieldNames.contains(inputCol)) {
           throw new IllegalArgumentException(s"Input column ${inputCol} does not exists.")
         }
@@ -131,7 +133,7 @@ object SparkUtil {
     }
 
       def transform(df: Dataset[_]): DataFrame = {
-        println(s"delete column $inputCol")
+        println(s"transform: delete column $inputCol")
         df.drop(inputCol)
       }
 
@@ -151,7 +153,7 @@ object SparkUtil {
     val data = _data
       .na.fill("")
       .na.fill(0.0)
-      .na.fill(0)
+      .na.fill(0).persist
 
     val set_columns = input_columns.toSet
 
@@ -186,6 +188,8 @@ object SparkUtil {
     println("running transformers")
 
     val tempData = trans.transform(data)
+
+    tempData.schema.printTreeString
 
     tempData
   }

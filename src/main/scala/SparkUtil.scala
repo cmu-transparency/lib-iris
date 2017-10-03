@@ -109,6 +109,7 @@ object SparkUtil {
     }
 
     def transform(df: Dataset[_]): DataFrame = {
+      println(s"rename column $inputCol to $outputCol")
       df.withColumnRenamed(inputCol, outputCol)
    }
 
@@ -122,16 +123,17 @@ object SparkUtil {
     val uid: String = Identifiable.randomUID("Dropper"))
       extends Transformer {
 
-    def transformSchema(schema: StructType): StructType = {
+      def transformSchema(schema: StructType): StructType = {
         if (! schema.fieldNames.contains(inputCol)) {
           throw new IllegalArgumentException(s"Input column ${inputCol} does not exists.")
         }
         StructType(schema.fields.filter{f => f.name != inputCol})
     }
 
-    def transform(df: Dataset[_]): DataFrame = {
-      df.drop(inputCol)
-   }
+      def transform(df: Dataset[_]): DataFrame = {
+        println(s"delete column $inputCol")
+        df.drop(inputCol)
+      }
 
     def copy(extra: ParamMap): Dropper = {
       new Dropper(inputCol, uid)
@@ -174,8 +176,6 @@ object SparkUtil {
     } :+ new VectorAssembler()
       .setInputCols(input_columns.diff(exclude_in_vector).toArray)
       .setOutputCol(output_column)
-
-
 
     val pipeline = new Pipeline().setStages(stages)
 

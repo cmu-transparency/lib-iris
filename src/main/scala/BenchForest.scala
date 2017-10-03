@@ -105,7 +105,7 @@ object BenchForest extends App {
       input_columns = data.columns.toSet,
       output_column = "features",
       exclude_in_vector = Set[String](target_column)
-    )
+    ).persist(StorageLevel.MEMORY_ONLY)
 
     //println(data_feats)
     //data_feats.collect.foreach { row => println(" " + row) }
@@ -118,42 +118,10 @@ object BenchForest extends App {
       .setNumTrees(10)
       .setMaxDepth(5)
 
+    println("training")
+
     val model = classer.fit(data_feats)
     println(model.toDebugString)
-
-    /*
-    val quantizer = new QuantileDiscretizer()
-      .setNumBuckets(cmdline.discrete_bins)
-      .setHandleInvalid("keep")
-     */
-
-    /*data.columns
-      .zip(data.schema.fields)
-      .foreach {
-        case (column_name, f) =>
-          var buckets: Option[Array[Double]] = None
-
-          val column_type = f.dataType
-          println(s"$column_name ($column_type)")
-
-          val column = {
-            column_type match {
-              case StringType | IntegerType => data
-              case DoubleType =>
-                val bucketizer = quantizer
-                  .setInputCol(column_name)
-                  .setOutputCol(column_name + "_discrete")
-                  .fit(data)
-
-                buckets = Some(bucketizer.getSplits)
-
-                bucketizer.transform(data)
-                  .drop(column_name)
-                  .withColumnRenamed(column_name + "_discrete", column_name)
-            }
-          }.select(column_name)
-
-     */
 
   }
 }

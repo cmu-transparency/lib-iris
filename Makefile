@@ -28,3 +28,6 @@ clean:
 #  (feature 9 repeats feature 6)
 #  (feature 10 repeats feature 8)
 #  (feature 11 some repeats)
+
+bench_forest:
+	time sbt "runMain edu.cmu.spf.iris.BenchForest -i /home/piotrm/repos/data-hmda/sample10k.tsv -t \"Action Type\""

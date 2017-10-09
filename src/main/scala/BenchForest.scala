@@ -115,8 +115,9 @@ object BenchForest extends App {
     val classer = new RandomForestClassifier()
       .setLabelCol(target_column)
       .setFeaturesCol("features")
-      .setNumTrees(10)
+      .setNumTrees(500)
       .setMaxDepth(5)
+      .setMaxBins(1000)
 
     println("training")
 

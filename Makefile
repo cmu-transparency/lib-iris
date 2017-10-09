@@ -29,7 +29,8 @@ clean:
 #  (feature 10 repeats feature 8)
 #  (feature 11 some repeats)
 
-BASE_LOC := /Users/piotrm/Dropbox/repos/github/spfoundations/data-hmda
+#BASE_LOC := /Users/piotrm/Dropbox/repos/github/spfoundations/data-hmda
+BASE_LOC := /home/piotrm/repos/data-hmda
 
 bench_forest:
-	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/sample.tsv -t \"Action Type\""
+	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/2014.tsv -t \"Action Type\""

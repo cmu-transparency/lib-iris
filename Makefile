@@ -14,3 +14,6 @@ BASE_LOC := /Users/piotrm/Dropbox/repos/github/spfoundations/data-hmda
 
 bench_forest:
 	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/2014.tsv -t \"Action Type\""
+
+test_convert:
+	time sbt "runMain edu.cmu.spf.iris.DataUtil convert --in $(BASE_LOC)/samplier.tsv --out $(BASE_LOC)/samplier.parquet"

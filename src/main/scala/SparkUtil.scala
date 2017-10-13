@@ -163,6 +163,8 @@ object SparkUtil {
       .filter{case (col_name, _) => set_columns.contains(col_name)}
       .flatMap {
       case (col_name, col_info) =>
+        //println(s"${col_name} ${col_info.dataType} ${col_info.metadata}")
+
           val new_name = "_" + col_name
           col_info.dataType match {
             case StringType => List(new StringIndexer()
@@ -175,23 +177,26 @@ object SparkUtil {
               //val temp1 = new Renamer(col_name, new_name)
               //List(temp)
           }
-    } :+ new VectorAssembler()
-      .setInputCols(input_columns.diff(exclude_in_vector).toArray)
-      .setOutputCol(output_column)
+    }
 
     val pipeline = new Pipeline().setStages(stages)
-
     println("fitting transformers")
-
-    val trans    = pipeline.fit(data)
-
+    val trans = pipeline.fit(data)
     println("running transformers")
 
     val tempData = trans.transform(data)
 
-    tempData.schema.printTreeString
+    val newSchema = StructType(tempData.schema.fields.map{ f =>
+      StructField(f.name, f.dataType, f.nullable)
+    })
 
-    tempData
+    val tempData2 = sql.createDataFrame(tempData.rdd, newSchema)
+
+    val vectorizer = new VectorAssembler()
+      .setInputCols(input_columns.diff(exclude_in_vector).toArray)
+      .setOutputCol(output_column)
+
+    vectorizer.transform(tempData2)
   }
 
 }

@@ -24,7 +24,7 @@ object BenchForest extends App {
     target: String = null)
 
   val parser = new scopt.OptionParser[CmdLine]("Statistics") {
-    head("Statistics", "0.1")
+    head("Random Forest Benchmark", "0.1")
     opt[File]('i', "in")
       .required
       .action((x, c) => c.copy(input_file = x))
@@ -105,7 +105,8 @@ object BenchForest extends App {
       input_columns = data.columns.toSet,
       output_column = "features",
       exclude_in_vector = Set[String](target_column)
-    ).persist(StorageLevel.MEMORY_ONLY)
+    ).select("features", target_column)
+      .persist(StorageLevel.MEMORY_ONLY)
 
     //println(data_feats)
     //data_feats.collect.foreach { row => println(" " + row) }
@@ -117,12 +118,13 @@ object BenchForest extends App {
       .setFeaturesCol("features")
       .setNumTrees(500)
       .setMaxDepth(5)
-      .setMaxBins(1000)
 
     println("training")
 
     val model = classer.fit(data_feats)
-    println(model.toDebugString)
+    //println(model.toDebugString)
+
+    println("done")
 
   }
 }

@@ -9,7 +9,6 @@ gen_l2:
 clean:
 	rm -Rf ratings.csv summary.txt
 
-
 #  [info] Person (prefs: (voice-over-narration ∈ imdb_keywords,1.0),(voice-over-narration ∈ imdb_keywords,-1.0))
 
 # Covered:
@@ -33,4 +32,10 @@ clean:
 BASE_LOC := /home/piotrm/repos/data-hmda
 
 bench_forest:
-	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/2014.tsv -t \"Action Type\""
+	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/all_years.tsv -t \"Action Type\""
+
+bench_forest_sample:
+	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/sample10k.tsv -t \"Action Type\""
+
+bench_forest_2016:
+	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/2016.tsv -t \"Action Type\""

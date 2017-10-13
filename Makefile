@@ -9,6 +9,7 @@ gen_l2:
 clean:
 	rm -Rf ratings.csv summary.txt
 
+<<<<<<< HEAD
 #  [info] Person (prefs: (voice-over-narration ∈ imdb_keywords,1.0),(voice-over-narration ∈ imdb_keywords,-1.0))
 
 # Covered:
@@ -28,8 +29,11 @@ clean:
 #  (feature 10 repeats feature 8)
 #  (feature 11 some repeats)
 
-#BASE_LOC := /Users/piotrm/Dropbox/repos/github/spfoundations/data-hmda
+
 BASE_LOC := /home/piotrm/repos/data-hmda
+
+BASE_LOC := /Users/piotrm/Dropbox/repos/github/spfoundations/data-hmda
+
 
 bench_forest:
 	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/all_years.tsv -t \"Action Type\""

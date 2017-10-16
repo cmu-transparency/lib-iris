@@ -9,11 +9,24 @@ gen_l2:
 clean:
 	rm -Rf ratings.csv summary.txt
 
-BASE_LOC := /Users/piotrm/Dropbox/repos/github/spfoundations/data-hmda
 #BASE_LOC := /home/piotrm/repos/data-hmda
+
+BASE_LOC := /Users/piotrm/Dropbox/repos/github/spfoundations/data-hmda
 
 bench_forest:
 	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/2014.tsv -t \"Action Type\""
 
+bench_forest_sample:
+	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/sample10k.tsv -t \"Action Type\""
+
+bench_forest_2016:
+	time sbt "runMain edu.cmu.spf.iris.BenchForest -i $(BASE_LOC)/2016.tsv -t \"Action Type\""
+
+test_tensorflow:
+	time sbt "runMain edu.cmu.spf.iris.TestDeep"
+
 test_convert:
 	time sbt "runMain edu.cmu.spf.iris.DataUtil convert --in $(BASE_LOC)/samplier.tsv --out $(BASE_LOC)/samplier.parquet"
+
+test_convert2:
+	time sbt "runMain edu.cmu.spf.iris.DataUtil convert --in $(BASE_LOC)/../data-wifi/observations.csv --out $(BASE_LOC)/../data-wifi/observations.parquet"

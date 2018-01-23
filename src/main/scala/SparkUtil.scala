@@ -37,6 +37,8 @@ object SparkUtil {
     .appName("SparkUtil")
     .getOrCreate()
 
+  sql.sparkContext.setCheckpointDir("checkpoint/")
+
   val csvReader = sql.read
     .format("com.databricks.spark.csv")
     .option("header", "true")

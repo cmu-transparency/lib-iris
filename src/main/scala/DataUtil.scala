@@ -31,6 +31,7 @@ object DataUtil extends App {
   case class CmdLine(
     input_data: Path = null,
     input_schema: Path = null,
+    input_delimiter: String = ",",
     output_data: Path = null,
     output_schema: Path = null,
     action: String = "convert"
@@ -58,6 +59,10 @@ object DataUtil extends App {
       .text("Input data schema.")
       .optional
       .action((x, c) => c.copy(input_schema = new Path(x)))
+    opt[String]("in-delim")
+      .text("Input delimiter.")
+      .optional
+      .action((x, c) => c.copy(input_delimiter = x))
 
     cmd("convert")
       .text("Convert datafile.")
@@ -84,13 +89,10 @@ object DataUtil extends App {
 
     println(s"convert $input_data to $output_data")
 
-    if (fs.exists(output_data)) {
-      println(s"WARNING: $output_data exists, deleting")
-      fs.delete(output_data)
-    }
+    FSUtils.deleteIfExists(output_data)
 
     val data = SparkUtil.csvReader
-      .option("delimiter", ",")
+      .option("delimiter", cmdline.input_delimiter)
       .option("inferSchema", "true")
       .load(cmdline.input_data.toString)
       //.persist(StorageLevel.MEMORY_ONLY)

@@ -83,6 +83,10 @@ object DataUtil extends App {
       .text("Select data as specified by an SQL statement.")
       .action((x, c) => c.copy(action = "sql"))
       .children(
+        opt[String]("out")
+          .text("Output data file.")
+          .required
+          .action((x, c) => c.copy(output_data = new Path(x))),
         opt[String]("sql")
           .text("SQL statement.")
           .required
@@ -139,7 +143,7 @@ object DataUtil extends App {
       dataConverted.write.parquet(cmdline.output_data.toString)
 
     } else {
-      data.coalesce(1).write
+      data.write
         .format("com.databricks.spark.csv")
         .option("header", "true")
         .option("delimiter", cmdline.output_delimiter)
@@ -199,12 +203,12 @@ object DataUtil extends App {
     println(s"input schema")
     data.schema.printTreeString
 
-    val dataSelected = SparkUtil.sql.sql(sql_command).coalesce(1)
+    val dataSelected = SparkUtil.sql.sql(sql_command)
 
     println(s"output schema")
     dataSelected.schema.printTreeString
 
-    dataSelected.coalesce(1).write
+    dataSelected.write
       .format("com.databricks.spark.csv")
       .option("header", "true")
       .option("delimiter", delim)

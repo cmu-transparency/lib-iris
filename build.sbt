@@ -32,7 +32,8 @@ lazy val root = Project(
     mainClass    := Some("TestClass"),
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core"  % "2.2.0",
-      "org.apache.spark" %% "spark-mllib" % "2.2.0"
+      "org.apache.spark" %% "spark-mllib" % "2.2.0",
+      "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly()
 //      "com.databricks"   %% "spark-csv"   % "1.5.0"
     )
   )

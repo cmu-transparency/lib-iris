@@ -96,8 +96,10 @@ object DataStats extends App {
 
     println(s"stats about $input_data")
 
+    val delim = DUtils.guessDelimeter(new File(input_data.toString))
+
     val data = SparkUtil.csvReader
-      .option("delimiter", ",")
+      .option("delimiter", delim)
       .option("inferSchema", "true")
       .load(cmdline.input_data.toString)
       //.persist(StorageLevel.MEMORY_ONLY)
@@ -159,10 +161,13 @@ object DataStats extends App {
 
     println(s"stats about $input_data")
 
+    val delim = DUtils.guessDelimeter(new File(input_data.toString))
+
     val data = SparkUtil.csvReader
-      .option("delimiter", ",")
+      .option("delimiter", delim)
       .option("inferSchema", "true")
       .load(cmdline.input_data.toString)
+      .na.drop
       //.persist(StorageLevel.MEMORY_ONLY)
 
     println(s"input schema")
@@ -183,21 +188,24 @@ object DataStats extends App {
     val assemble = new VectorAssembler()
       .setOutputCol("features")
 
+    val numeric: DataType => Boolean =
+      t => DataTypes.StringType != t && DataTypes.TimestampType != t
+
     val stats = Seq(
       ("Pearson correlation", "corr",
-        DataTypes.StringType != _,
+        numeric,
         (col1: String, col2: String) => {
           val corr = stat.corr(col1, col2)
           (f"$corr%3.3f", corr, Math.abs(corr))
         }),
       ("covariance", "cov",
-        DataTypes.StringType != _,
+        numeric,
         (col1: String, col2: String) => {
           val cov = stat.cov(col1, col2)
           (f"$cov%3.3f", cov, Math.abs(cov))
         }),
       ("linear", "linear",
-        DataTypes.StringType != _,
+        numeric,
         (col1: String, col2: String) => {
           assemble.setInputCols(Seq(col1).toArray)
           val dat = assemble.transform(data)

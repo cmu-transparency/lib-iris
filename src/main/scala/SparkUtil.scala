@@ -34,6 +34,7 @@ object SparkUtil {
     .config("spark.ui.showConsoleProgress", false)
     .config("spark.driver.memory", "16g")
     .config("spark.executor.memory", "64g")
+    .config("spark.sql.crossJoin.enabled", "true")
     .appName("SparkUtil")
     .getOrCreate()
 

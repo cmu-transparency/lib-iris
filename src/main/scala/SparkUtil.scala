@@ -17,7 +17,9 @@ import org.apache.spark.ml.UnaryTransformer
 import org.apache.spark.sql.types._
 
 import org.apache.spark.ml.{Pipeline, PipelineStage, Transformer}
-import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
+import org.apache.spark.ml.feature.{
+  StringIndexer, VectorAssembler, QuantileDiscretizer
+}
 
 object SparkUtil {
   Logger.getLogger("Remoting").setLevel(Level.ERROR)
@@ -101,7 +103,7 @@ object SparkUtil {
       extends Transformer {
 
     def transformSchema(schema: StructType): StructType = {
-      println(s"transformSchema: rename column $inputCol to $outputCol")
+      //println(s"transformSchema: rename column $inputCol to $outputCol")
       val inputType = schema(inputCol).dataType
       val nullable  = schema(inputCol).nullable
         if (schema.fieldNames.contains(outputCol)) {
@@ -113,7 +115,7 @@ object SparkUtil {
     }
 
     def transform(df: Dataset[_]): DataFrame = {
-      println(s"transform: rename column $inputCol to $outputCol")
+      //println(s"transform: rename column $inputCol to $outputCol")
       df.withColumnRenamed(inputCol, outputCol)
    }
 
@@ -128,7 +130,7 @@ object SparkUtil {
       extends Transformer {
 
       def transformSchema(schema: StructType): StructType = {
-        println(s"transformSchema: delete column $inputCol")
+        //println(s"transformSchema: delete column $inputCol")
         if (! schema.fieldNames.contains(inputCol)) {
           throw new IllegalArgumentException(s"Input column ${inputCol} does not exists.")
         }
@@ -136,7 +138,7 @@ object SparkUtil {
     }
 
       def transform(df: Dataset[_]): DataFrame = {
-        println(s"transform: delete column $inputCol")
+        //println(s"transform: delete column $inputCol")
         df.drop(inputCol)
       }
 
@@ -200,5 +202,50 @@ object SparkUtil {
       .setOutputCol(output_column)
 
     vectorizer.transform(tempData2)
+  }
+
+  def filterIdentifiers(
+    data: DataFrame
+  ): DataFrame = {
+
+    val schema = data.schema
+
+    val stages = data.columns.zip(data.schema.fields)
+      .flatMap {
+      case (col_name, col_info) =>
+          val vals = data.select(col_name).distinct().count()
+
+          val new_name = "_" + col_name
+          col_info.dataType match {
+            case StringType =>
+
+              if (vals > 10000) {
+                println(s"dropping identifier $col_name")
+                List(new Dropper(col_name))
+              } else {
+                List()
+              }
+            case DoubleType | IntegerType =>
+              if (vals > 10000) {
+                println(s"quantizing $col_name")
+                List(
+                  new QuantileDiscretizer()
+                    .setNumBuckets(10000)
+                    .setInputCol(col_name)
+                    .setOutputCol(new_name),
+                  new Dropper(col_name),
+                  new Renamer(new_name, col_name)
+                )
+              } else { List ()
+              }
+          }
+      }
+
+    val pipeline = new Pipeline().setStages(stages)
+    println("fitting transformers")
+    val trans = pipeline.fit(data)
+    println("running transformers")
+
+    trans.transform(data)
   }
 }

@@ -180,14 +180,15 @@ object DataStats extends App {
 
     println(s"pairstats about $input_data")
 
-    val delim = DUtils.guessDelimeter(new File(input_data.toString))
+    //val delim = DUtils.guessDelimeter(new File(input_data.toString))
+    val delim = "\t"
 
     val data = {
       val temp = SparkUtil.csvReader
         .option("delimiter", delim)
         .option("inferSchema", "true")
         .load(input_data.toString)
-        .na.drop
+        //.na.drop # might be needed in some cases
 
       if (null != input_filter) {
         println(s"filtering with $input_filter")
@@ -283,6 +284,10 @@ object DataStats extends App {
     val dotify_name = { s: String => s
       .replace("[", "")
       .replace("]", "")
+      .replace("%", "percent")
+      .replace(" ", "_")
+      .replace("-", "_")
+      .replace("/", "_")
     }
 
     data_with_info.foreach { case (col1, info1) =>

@@ -14,6 +14,17 @@ job-stats:
 
 HMDA := /longterm/piotrm/data-hmda/all_years.tsv
 HMDA_BIGGEST := /longterm/piotrm/data-hmda/respondent_0000451965.tsv
+HMDA_CLEANEST := /longterm/piotrm/data-hmda/all_years.morerelevant.tsv.d
+
+hmda-dot-pairs-nmi:
+	./datastats.sh pairstats --in $(HMDA_CLEANEST) --dot_out hmda-nmi.dot \
+		--dot_weight nmi
+	neato -Tpdf ../hmda-nmi.dot -o hmda-nmi.pdf
+
+hmda-dot-pairs-nmi-0000617677:
+	./datastats.sh pairstats --in $(HMDA_CLEANEST) --dot_out hmda-nmi-0000617677.dot \
+		--dot_weight nmi --in-filter "\"\`Respondent ID\`=='0000617677'\""
+	neato -Tpdf ../hmda-nmi-0000617677.dot -o hmda-nmi-0000617677.pdf
 
 hmda-describe:
 	./datautil.sh describe --in $(HMDA)

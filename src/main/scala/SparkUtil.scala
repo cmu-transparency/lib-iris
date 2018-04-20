@@ -43,7 +43,7 @@ object SparkUtil {
   sql.sparkContext.setCheckpointDir("checkpoint/")
 
   val csvReader = sql.read
-    .format("com.databricks.spark.csv")
+    .format("csv")//"com.databricks.spark.csv")
     .option("header", "true")
     .option("inferSchema", "true")
     .option("mode", "FAILFAST")
@@ -55,7 +55,7 @@ object SparkUtil {
     delimiter: String = ","): Unit = {
     dataframe.coalesce(1)
       .write
-      .format("com.databricks.spark.csv")
+      .format("csv")//"com.databricks.spark.csv")
       .option("header", "true")
       .option("delimiter", delimiter)
       .save(file)

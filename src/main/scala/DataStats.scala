@@ -25,14 +25,18 @@ import org.apache.spark.storage.StorageLevel
 import java.io.{File,PrintWriter,FileWriter,BufferedWriter}
 import org.apache.commons.io.FileUtils
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs._
-import org.apache.hadoop.fs.Path
+//import org.apache.hadoop.conf.Configuration
+//import org.apache.hadoop.fs._
+//import org.apache.hadoop.fs.Path
+
+import java.nio.file.Path
+import java.nio.file.Paths
 
 object DataStats extends App {
   case class CmdLine(
     input_data: Path = null,
     input_schema: Path = null,
+    input_filter: String = null,
     dot_output: Path = null,
     dot_weight: String = "corr",
     columns: Regex = ".*".r,
@@ -40,16 +44,20 @@ object DataStats extends App {
   )
 
   val parser = new scopt.OptionParser[CmdLine](programName = "DataStats") {
-    head("DataStats", "0.1")
+    head("DataStats", "0.2")
 
     opt[String]("in")
       .text("Input data file.")
       .required
-      .action((x, c) => c.copy(input_data = new Path(x)))
+      .action((x, c) => c.copy(input_data = Paths.get(x)))
     opt[String]("in-schema")
       .text("Input data schema.")
       .optional
-      .action((x, c) => c.copy(input_schema = new Path(x)))
+      .action((x, c) => c.copy(input_schema = Paths.get(x)))
+    opt[String]("in-filter")
+      .text("Input filter as SQL WHERE query (skip the 'WHERE').")
+      .optional
+      .action((x, c) => c.copy(input_filter = x))
     opt[String]("cols")
       .text("Select columns by regexp")
       .optional
@@ -64,7 +72,7 @@ object DataStats extends App {
       opt[String]("dot_out")
         .text("Output dot file.")
         .optional
-        .action((x, c) => c.copy(dot_output = new Path(x)))
+        .action((x, c) => c.copy(dot_output = Paths.get(x)))
       opt[String]("dot_weight")
         .text("Statistic to use for edge weights in dot output.")
         .optional
@@ -89,20 +97,30 @@ object DataStats extends App {
   }
 
   def ActionStats(cmdline: CmdLine): Unit = {
-    val conf = new Configuration()
-    val fs = FileSystem.get(conf)
+    //val conf = new Configuration()
+    //val fs = FileSystem.get(conf)
 
     val input_data = cmdline.input_data
+    val input_filter = cmdline.input_filter
 
     println(s"stats about $input_data")
 
     val delim = DUtils.guessDelimeter(new File(input_data.toString))
 
-    val data = SparkUtil.csvReader
-      .option("delimiter", delim)
-      .option("inferSchema", "true")
-      .load(cmdline.input_data.toString)
-      //.persist(StorageLevel.MEMORY_ONLY)
+    val data = {
+      val temp = SparkUtil.csvReader
+        .option("delimiter", delim)
+        .option("inferSchema", "true")
+        .load(input_data.toString)
+
+      if (null != input_filter) {
+        println(s"filtering with $input_filter")
+        temp.where(input_filter)
+      } else {
+        temp
+      }
+    }
+    //.persist(StorageLevel.MEMORY_ONLY)
 
     println(s"input schema")
     data.schema.printTreeString
@@ -154,21 +172,33 @@ object DataStats extends App {
   }
 
   def ActionPairStats(cmdline: CmdLine): Unit = {
-    val conf = new Configuration()
-    val fs = FileSystem.get(conf)
+    //val conf = new Configuration()
+    //val fs = FileSystem.get(conf)
 
     val input_data = cmdline.input_data
+    val input_filter = cmdline.input_filter
 
-    println(s"stats about $input_data")
+    println(s"pairstats about $input_data")
 
     val delim = DUtils.guessDelimeter(new File(input_data.toString))
 
-    val data = SparkUtil.csvReader
-      .option("delimiter", delim)
-      .option("inferSchema", "true")
-      .load(cmdline.input_data.toString)
-      .na.drop
-      //.persist(StorageLevel.MEMORY_ONLY)
+    val data = {
+      val temp = SparkUtil.csvReader
+        .option("delimiter", delim)
+        .option("inferSchema", "true")
+        .load(input_data.toString)
+        .na.drop
+
+      if (null != input_filter) {
+        println(s"filtering with $input_filter")
+        temp.where(input_filter)
+      } else {
+        temp
+      }
+    }.persist(StorageLevel.MEMORY_ONLY)
+
+    val data_for_information = SparkUtil.filterIdentifiers(data)
+    data_for_information.persist(StorageLevel.MEMORY_ONLY)
 
     println(s"input schema")
     data.schema.printTreeString
@@ -188,24 +218,38 @@ object DataStats extends App {
     val assemble = new VectorAssembler()
       .setOutputCol("features")
 
-    val numeric: DataType => Boolean =
-      t => DataTypes.StringType != t && DataTypes.TimestampType != t
+    val numeric: (String, DataType) => Boolean = {
+      case (n, t) => DataTypes.StringType != t && DataTypes.TimestampType != t
+    }
+
+    val any: (String, DataType) => Boolean = { case (n, t) => true }
+
+    val any_information: (String, DataType) => Boolean = {
+      case (n, t) => data_for_information.columns.contains(n)
+    }
 
     val stats = Seq(
-      ("Pearson correlation", "corr",
-        numeric,
+      ("normalized mutual information", "nmi", any,
+        (col1: String, col2: String) => {
+          val nmi = IUtils.normalized_mutual_information(
+            data_for_information,
+            data_for_information(col1),
+            data_for_information(col2)
+          )
+          (f"$nmi%3.3f", nmi, Math.abs(nmi))
+        })
+/*
+      ("Pearson correlation", "corr", numeric,
         (col1: String, col2: String) => {
           val corr = stat.corr(col1, col2)
           (f"$corr%3.3f", corr, Math.abs(corr))
         }),
-      ("covariance", "cov",
-        numeric,
+      ("covariance", "cov", numeric,
         (col1: String, col2: String) => {
           val cov = stat.cov(col1, col2)
           (f"$cov%3.3f", cov, Math.abs(cov))
         }),
-      ("linear", "linear",
-        numeric,
+      ("linear", "linear", numeric,
         (col1: String, col2: String) => {
           assemble.setInputCols(Seq(col1).toArray)
           val dat = assemble.transform(data)
@@ -216,6 +260,7 @@ object DataStats extends App {
           val stddev_val: Double = temp.collect().head.getDouble(0)
           (f"""$rmse%3.3f/$stddev_val%3.3f""", rmse, 1 - rmse/stddev_val)
         })
+ */
     )
 
     val (writer, close_writer) = {
@@ -248,8 +293,10 @@ object DataStats extends App {
         val col2_name = dotify_name(col2)
         val typ2 = info2.dataType
         println(s"$col1 [$typ1], $col2 [$typ2]")
-        stats.foreach { case (stat_name, stat_short_name, stat_type_filter, stat_fun) =>
-          if (stat_type_filter(typ1) && stat_type_filter(typ2)) {
+        stats.foreach {
+          case (stat_name, stat_short_name, stat_type_filter, stat_fun) =>
+
+          if (stat_type_filter(col1, typ1) && stat_type_filter(col2, typ2)) {
             val (stat_label, stat_val, stat_weight) = stat_fun(col1, col2)
             println(s"  $stat_name: $stat_val")
             if (cmdline.dot_weight == stat_short_name) {

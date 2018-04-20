@@ -134,8 +134,8 @@ object DataUtil extends App {
     val data = SparkUtil.csvReader
       .option("delimiter", delim)
       .option("inferSchema", "true")
-      .load(cmdline.input_data.toString)
-      //.persist(StorageLevel.MEMORY_ONLY)
+      .load(input_data.toString)
+    //.persist(StorageLevel.MEMORY_ONLY)
 
     println(s"input schema")
     data.schema.printTreeString

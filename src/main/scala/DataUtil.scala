@@ -57,6 +57,10 @@ object DataUtil extends App {
       .optional
       .action((x, c) => c.copy(input_delimiter = x))
 
+    cmd("describe")
+      .text("Describe dataset.")
+      .action((x, c) => c.copy(action = "describe"))
+
     cmd("convert")
       .text("Convert datafile.")
       .action((x, c) => c.copy(action = "convert"))
@@ -101,7 +105,8 @@ object DataUtil extends App {
 
   val actions = Map[String,(CmdLine => Unit)](
     "convert" -> ActionConvert,
-    "sql" -> ActionSQL
+    "sql" -> ActionSQL,
+    "describe" -> ActionDescribe
   )
 
   parser.parse(args, CmdLine()) match {
@@ -213,6 +218,33 @@ object DataUtil extends App {
       .option("header", "true")
       .option("delimiter", delim)
       .save(cmdline.output_data.toString)
+  }
+
+  def ActionDescribe(cmdline: CmdLine): Unit = {
+    val conf = new Configuration()
+    val fs = FileSystem.get(conf)
+
+    val input_data = cmdline.input_data
+
+    println(s"describe $input_data")
+
+    val delim = if (null != cmdline.input_delimiter) {
+      cmdline.input_delimiter
+    } else {
+      DUtils.guessDelimeter(new File(input_data.toString))
+    }
+
+     val data = SparkUtil.csvReader
+      .option("delimiter", delim)
+      .option("inferSchema", "true")
+      .option("quote", "\u0000") // jobs.tsv does not use quotes but
+                                 // has a string that starts with a
+                                 // quote which messes things up
+                                 // without this option.
+      .load(cmdline.input_data.toString)
+
+    println(s"input schema")
+    data.schema.printTreeString
   }
 
   def convertColumnNameParquet(col: String): String = {

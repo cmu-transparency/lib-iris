@@ -1,8 +1,9 @@
-JOBS_DIR := /Users/piotrm/Dropbox/repos/github/spfoundations/data-jobs/data
+#JOBS_DIR := /Users/piotrm/Dropbox/repos/github/spfoundations/data-jobs/data
+JOBS_DIR := /longterm/piotrm/data-jobs/data
 JOBS_FILE := $(JOBS_DIR)/jobs.tsv
 JOBS_NOTEXT_FILE := $(JOBS_DIR)/jobs.notext.tsv
-APPS_FILE := $(JOBS_DIR)/apps.tsv
-USERS_FILE := $(JOBS_DIR)/users.tsv
+APPS_FILE := $(JOBS_DIR)/apps.original.tsv
+USERS_FILE := $(JOBS_DIR)/users.original.tsv
 USERS_EXTENDED_FILE := $(JOBS_DIR)/users_extended.tsv
 
 JOINED_PART_FILE := $(JOBS_DIR)/joined.tsv
@@ -11,8 +12,77 @@ JOINED_FILE := $(JOBS_DIR)/jobs.joined.tsv
 job-stats:
 	./datastats.sh pairstats --in $(JOINED_FILE)
 
+HMDA := /longterm/piotrm/data-hmda/all_years.tsv
+HMDA_BIGGEST := /longterm/piotrm/data-hmda/respondent_0000451965.tsv
+
+hmda-describe:
+	./datautil.sh describe --in $(HMDA)
+
+hmda-responders:
+	./datautil.sh sql --in $(HMDA) \
+	--out 'temp.csv' \
+	--sql "\"select \
+	\`Respondent ID\`, count(*) as cnt \
+	from input \
+	group by \`Respondent ID\` \
+	order by cnt \
+	\""
+
+# biggest responders
+# 0000617677	475107
+# 26-2049351	514807
+# 22-3039688	795266
+# 75-2921540	834143
+# 0000480228	905288
+# 0000504713	993512
+# 0000852218	1330146
+# 26-4599244	1424048
+# 7197000003	1526949
+# 0000451965	3567655
+
+hmda-getbiggest:
+	./datautil.sh sql --in $(HMDA) \
+	--out 'temp.csv' \
+	--sql "\"select \
+	* \
+	from input \
+	where \`Respondent ID\` = 0000451965 \
+	\""
+
+hmda-getrelevant:
+	./datautil.sh sql --in $(HMDA_BIGGEST) \
+	--out 'temp.csv' \
+	--sql "\"select \
+	* \
+	from input \
+	where \`Loan Purpose\` = 'Home purchase' \
+	and \`Action Type\` != 'Loan purchased by the institution' \
+	and \`Action Type\` != 'Application withdrawn by applicant' \
+	and \`Action Type\` != 'Application approved but not accepted' \
+	and \`Action Type\` != 'File closed for incompleteness' \
+	\""
+	bash combine_with_headers.sh ../temp.csv/part*.csv > /longterm/piotrm/data-hmda/respondent_0000451965.relevant.csv
+
 convert-to-csv:
 	./datautil.sh convert --in $(JOINED_FILE) --out $(JOINED_FILE).tsv
+
+make-negative-apps:
+	./datautil.sh sql \
+	--in $(USERS_FILE) \
+	--in-more $(APPS_FILE) \
+	--in-more $(JOBS_FILE) \
+	--out /longterm/piotrm/data-jobs/negatives.csv \
+	--sql "\"select user.UserID, user.WindowID, user.Split, job.StartDate as ApplicationDate, job.JobID \
+	from input user \
+	full outer join input2 as job \
+	where user.WindowID = job.WindowID \
+	and not exists \
+	(select * from input1 as appB \
+          join input userB on appB.UserID = userB.UserID \
+          where appB.WindowID = user.WindowID \
+	  and userB.UserID = user.UserID \
+	  and appB.JobID = job.JobID \
+	) \""
 
 extend-users:
 	./datautil.sh sql \

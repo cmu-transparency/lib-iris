@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import utils.misc as misc
+from . import misc
 
 from typing import TypeVar, Iterable
 
@@ -7,6 +7,7 @@ TFeature = TypeVar('feature')
 TRow = TypeVar('dataset row')
 TDataset = TypeVar('dataset')
 TBaseModel = TypeVar('base model')
+TValue = TypeVar('value')
 
 
 class Model(ABC):
@@ -32,11 +33,10 @@ class Model(ABC):
 
 
 class Factor(object):
-
     def __init__(self,
                  feature: TFeature,
-                 actual_value=None,
-                 predicted_value=None,
+                 actual_value: TValue = None,
+                 predicted_value: TValue = None,
                  predicted_proba: float = None,
                  influence: float = None) -> None:
 
@@ -46,10 +46,11 @@ class Factor(object):
         self.predicted_proba = predicted_proba
         self.influence = influence
 
-    def __str__(self): return "Factor(%s=%s/%s)@%0.3f" % (
-            str(self.request),
-            str(self.actual),
-            str(self.predicted),
+    def __str__(self): return "Factor(%s=%s/%s @ %s/%0.3f)" % (
+            str(self.feature),
+            str(self.actual_value),
+            str(self.predicted_value),
+            str(self.predicted_proba),
             self.influence
     )
 

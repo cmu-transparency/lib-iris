@@ -5,7 +5,8 @@ experimentally derived perception of possibility.
 """
 
 import copy
-import utils.misc as misc
+
+from . import misc
 
 
 class Phrase(misc.LocalsMixin):  # pylint: disable=too-few-public-methods

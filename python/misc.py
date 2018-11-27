@@ -199,8 +199,6 @@ class LocalsMixin(object):  # pylint: disable=too-few-public-methods
 
 # IO #
 
-# print and flush
-
 def printme(*ss):
     """Print and flush."""
 
@@ -210,9 +208,19 @@ def printme(*ss):
 def which(*files):
     for file in files:
         if os.path.exists(file):
+            print(f"which: selected {file}")
             return file
 
-    return None
+    raise Except(f"which: did not found a file from the given list {files}.")
+
+
+def which_dir(file, *dirs):
+    for dir in dirs:
+        if os.path.exists(dir + "/" + file):
+            print(f"which_dir: selected {file} in {dir}")
+            return dir + "/" + file
+
+    raise Except(f"which_dir: did not found {file} in any of these directories: {dirs}.")
 
 
 class Watch(object):

@@ -8,7 +8,7 @@ import sys
 import os
 from contextlib import contextmanager
 
-import misc
+from . import misc
 
 # we need a lock, so that other threads don't snatch control
 # while we have set a temporary parent

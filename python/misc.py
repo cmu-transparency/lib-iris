@@ -1,7 +1,8 @@
 """ Misc utilities not yet sorted into individual packages. """
 
+
 import os
-# import sys
+from sys import stderr
 import pickle
 import _pickle as cp
 import math
@@ -64,6 +65,14 @@ def _5(atuple):
     return atuple[5]
 
 
+first = _0
+second = _1
+third = _2
+fourth = _3
+fifth = _4
+sixth = _5
+
+
 # iterators
 
 def frange(begin: float, end: float, width: float = 1.0) -> Iterable[float]:
@@ -76,6 +85,13 @@ def frange(begin: float, end: float, width: float = 1.0) -> Iterable[float]:
 
 
 # dicts #
+
+def insert_with(d, k, v, f):
+    if k in d:
+        d[k] = f(d[k], v)
+    else:
+        d[k] = v
+
 
 def less(amap: Mapping[A, B], exceptions: Iterable[A]) -> Mapping[A, B]:
     """Return a new dictionary with items in exceptions removed."""
@@ -211,7 +227,7 @@ def which(*files):
             print(f"which: selected {file}")
             return file
 
-    raise Except(f"which: did not found a file from the given list {files}.")
+    raise Exception(f"which: did not found a file from the given list {files}.")
 
 
 def which_dir(file, *dirs):
@@ -220,7 +236,7 @@ def which_dir(file, *dirs):
             print(f"which_dir: selected {file} in {dir}")
             return dir + "/" + file
 
-    raise Except(f"which_dir: did not found {file} in any of these directories: {dirs}.")
+    raise Exception(f"which_dir: did not found {file} in any of these directories: {dirs}.")
 
 
 class Watch(object):
@@ -381,3 +397,54 @@ def get_args_2strings() -> (str, str):
     args = parser.parse_args()
 
     return (args.string1, args.string2)
+
+
+# lenses
+
+# lenses
+lens_identity = (lambda a: a,
+                 lambda a, b: b,
+                 lambda a, b: b)
+
+
+# todo: optimize for identity
+def lens_compose(l1,  # B inside A
+                 l2   # C inside B
+                 ):   # return C inside A
+
+    (getter1,  # A -> B
+     setter1,  # A,B -> A
+     setter1_) = l1
+    (getter2,  # B -> C
+     setter2,  # B,C -> B
+     setter2_) = l2
+
+    def getter(a):
+        return getter2(getter1(a))
+    # A -> C
+
+    def setter(a, c):
+        return setter1(a, setter2(getter1(a), c))
+    # A,C -> A
+
+    def setter_(a, c):
+        return setter1_(a, setter2_(getter1(a), c))
+    # A,C -> A
+
+    return (getter, setter, setter_)
+
+
+def identity(x):
+    return x
+
+
+def eprint(s):
+    stderr.write(s)
+
+
+def latexify(s):
+    return (s
+            .replace('≤', '$\\leq$')
+            .replace('≥', '$\\geq$')
+            .replace('_', '\\_')
+            )

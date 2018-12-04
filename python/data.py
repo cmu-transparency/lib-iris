@@ -6,8 +6,8 @@ from pyspark.sql import DataFrame as sparkDataFrame
 from pyspark.sql import Row as sparkRow
 from pandas import DataFrame as pandasDataFrame
 
-from spark import Spark
-from misc import T
+from .spark import Spark
+from .misc import T
 
 
 class DataFrame(object):

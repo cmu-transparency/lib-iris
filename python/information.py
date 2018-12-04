@@ -3,15 +3,15 @@ import unittest
 from typing import Iterable, Dict, List, Tuple
 from collections import defaultdict
 
-from maths import lg
-from misc import T
+from .maths import lg
+from .misc import T
 
 from pyspark.sql import DataFrame as sparkDataFrame
 from pyspark.sql import Row as sparkRow
 from pandas import DataFrame as pandasDataFrame
 
-from probmonad import flip, return_, uniform
-from data import SparkFactory
+from .probmonad import flip, return_, uniform
+from .data import SparkFactory
 
 
 def entropy_of_counts(counts: Iterable[int]) -> float:
@@ -75,6 +75,21 @@ class Pandas(object):
         counts = list(df[x].value_counts())
         x_ent = entropy_of_counts(counts)
         return x_ent
+
+    @classmethod
+    def _entropy_series(cls, ds):
+        counts = list(ds.value_counts())
+        x_ent = entropy_of_counts(counts)
+        return x_ent
+
+    @classmethod
+    def entropy(cls, df: pandasDataFrame, x: str):
+        df = df[[x]]
+        return cls._entropy(df, x)
+
+    @classmethod
+    def entropy_series(cls, ds):
+        return cls._entropy_series(ds)
 
     @classmethod
     def mutual_information(cls, df: pandasDataFrame, x: str, y: str, normalize=False):

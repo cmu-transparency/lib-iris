@@ -3,8 +3,8 @@ import operator
 import numpy as np
 from pymonad import Monad
 
-from misc import first, second, insert_with
-from maths import lg
+from .misc import first, second, insert_with
+from .maths import lg
 
 # import multiprocessing
 # from multiprocessing import Pool

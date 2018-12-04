@@ -9,8 +9,8 @@ from pyspark.sql import SQLContext, SparkSession, DataFrame  # pylint: disable=i
 from pyspark.sql.types import StringType         # pylint: disable=import-error
 from pyspark.ml.feature import StringIndexer, VectorAssembler  # pylint: disable=import-error
 
-from misc import named_of_indexed, tab, A
-from jvm import class_name
+from .misc import named_of_indexed, tab, A
+from .jvm import class_name
 
 
 # SparkContext.setSystemProperty('spark.executor.memory', '8g')

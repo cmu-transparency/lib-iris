@@ -3,10 +3,43 @@ import functools
 from pyspark.sql import DataFrame
 
 
-def qii(dataset: DataFrame):
+class QII(object):
+    def __init__(self, dataset: DataFrame, model, dist_in, dist_out):
+        self.dataset = dataset
+        self.model = model
+        self.dist_in = dist_in
+        self.dist_out = dist_out
 
     @functools.lru_cache(maxsize=None)
-    def eval(user,
+    def eval(self, row, factor):
+
+        output = self.model.predict(row)
+
+        diff = 0.0
+        count = 0
+
+        for row_ in self.dataset.iterrows():
+            cf_row = row.copy()
+
+            row = row_[1]
+
+            count += 1
+
+            cf_row[factor] = row[factor]
+
+            cf_output = self.model.predict(cf_row)
+
+            if output.__class__ != cf_output.__class__:
+                raise Exception("counterfactual is of different class than original: " +
+                                f"{output.__class__} != {cf_output.__class__}")
+
+            diff += self.dist_out(cf_output, output) / self.dist_in(row, cf_row)
+
+        return diff / float(count)
+
+
+    @functools.lru_cache(maxsize=None)
+    def eval_rec(user,
              model,
              request,
              request_factor,

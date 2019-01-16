@@ -1,17 +1,15 @@
 import unittest
 
-from typing import Iterable, Dict, List, Tuple
+from typing import Iterable, List, Tuple
 from collections import defaultdict
 
 from .maths import lg
 from .misc import T
 
 from pyspark.sql import DataFrame as sparkDataFrame
-from pyspark.sql import Row as sparkRow
 from pandas import DataFrame as pandasDataFrame
 
-from .probmonad import flip, return_, uniform
-from .data import SparkFactory
+from .probmonad import return_, uniform
 
 
 def entropy_of_counts(counts: Iterable[int]) -> float:

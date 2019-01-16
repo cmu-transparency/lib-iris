@@ -2,6 +2,7 @@ import operator
 
 import numpy as np
 from pymonad import Monad
+from pandas import DataFrame as pandasDataFrame
 
 from .misc import first, second, insert_with
 from .maths import lg
@@ -29,6 +30,9 @@ class Dist(Monad):
     def map(self, f):
         return map(f, self)
 
+    def map_values(self, f):
+        return Dist(dict(map(lambda k_v: (f(k_v[0]), k_v[1]), self)))
+
     def values(self):
         return self.dist.keys()
 
@@ -46,6 +50,20 @@ class Dist(Monad):
         return temp
 
     def __eq__(self, other): return str(self) == str(other)
+
+    def power(self, exp):
+        if exp == 1:
+            return self.bind(lambda v: singleton(v,))
+
+        dist_rest = self.power(exp - 1)
+        return self.bind(
+            lambda this: dist_rest.bind(
+                lambda rest: singleton(this, *rest)
+            )
+        )
+
+    def to_pandas(self, columns):
+        return pandasDataFrame(list(self.values()), columns=columns)
 
     @staticmethod
     def singleton(*value):

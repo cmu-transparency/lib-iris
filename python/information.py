@@ -58,6 +58,22 @@ def conditional_mutual_information(df, x, y, c):
 
 class Pandas(object):
     @classmethod
+    def counts_of_columns(cls, df: pandasDataFrame, cols: Iterable[str]) -> Iterable[int]:
+        return (df.groupby(cols)
+                .size()
+                .reset_index()
+                .values[:,-1]
+                )
+
+    @classmethod
+    def conditional_counts_of_columns(cls, df: pandasDataFrame, colsX: Iterable[str], colsY: Iterable[str]) -> Iterable[int]:
+        return (df.groupby([*colsX, *colsY])
+                .size()
+                .reset_index()[[*colsY, 0]]
+                .values
+                )
+
+    @classmethod
     def _conditional_entropy(cls, df: pandasDataFrame, x: str, y: str) -> float:
         counts = (
             df
